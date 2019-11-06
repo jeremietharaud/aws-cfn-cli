@@ -1,0 +1,5 @@
+.circleci/config.yml
+cfncli/.flake8
+CHANGELOG.md
+LICENSE
+tests/*

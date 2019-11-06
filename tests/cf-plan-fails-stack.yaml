@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Stack that fails during planning'
+Resources:
+  LambdaExporter:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./code/
+      Handler: lambda.lambda_handler
+      MemorySize: 128
+      Runtime: python3.6
+      Timeout: 10

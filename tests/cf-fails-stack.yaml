@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Test stack that fails'
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access and HTTP from the load balancer only
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        Test: '123'

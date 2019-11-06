@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Stack that fails during planning because of missing parameter'
+Parameters:
+  CodeURI:
+    Type: String
+    Description: 'URL of the lambda in S3'
+Resources:
+  LambdaExporter:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: !Ref CodeURI
+      Handler: lambda.lambda_handler
+      MemorySize: 128
+      Runtime: python3.6
+      Timeout: 10

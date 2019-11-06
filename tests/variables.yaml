@@ -1,0 +1,6 @@
+Name: 'test-stack'
+Tags:
+  Project: 'cfncli'
+  Env: 'tst'
+  Name: 'test-stack'
+Variables:
