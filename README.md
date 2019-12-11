@@ -43,7 +43,7 @@ cfncli option
 
  * --tags Key=Value : list of CFN tags parameters in key=value format and separated by comma
 
- * --var-file var-file: name or path of the file containing variables of the stack. File must be in Yaml format and should contain at least one of these section: `Name`, `Tags` or `Variables`. If used, this option will override --name, --var and --tags options.
+ * --var-file var-file: name or path of the file containing variables of the stack. File must be whether in Json (list of ParameterKey/ParameterValue) or in Yaml format. If Yaml file, it should contain at least one of these section: `Name`, `Tags` or `Variables`. Note that this option will override --name, --var and --tags options.
 
  * --name stack-name: name of the stack to deploy. By default, it uses the stack file name (without extension)
 
