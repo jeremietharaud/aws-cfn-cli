@@ -410,6 +410,16 @@ def main():
         logger.error(e)
         exit(1)
 
+    if args.name:
+        stack_name = args.name
+    else:
+        stack_name = os.path.splitext(str(args.stack_file))[0]
+
+    if args.tags:
+        tags = str_tags_to_cf_params(tags=args.tags)
+    else:
+        tags = []
+
     if args.var_file:
         try:
             with open(args.var_file, 'r') as stream:
@@ -417,27 +427,19 @@ def main():
                     streams = yaml.safe_load(stream)
                 except yaml.YAMLError as e:
                     raise e
-                stack_name = streams.get('Name')
-                if stack_name is None:
-                    if args.name:
-                        stack_name = args.name
-                    else:
-                        stack_name = os.path.splitext(str(args.stack_file))[0]
-                params = to_cf_params(params=streams.get('Variables'))
-                tags = tags_to_cf_params(tags=streams.get('Tags'))
+                if isinstance(streams, list):
+                    params = streams
+                else:
+                    name = streams.get('Name') 
+                    if name is not None:
+                        stack_name = name
+                    params = to_cf_params(params=streams.get('Variables'))
+                    tags = tags_to_cf_params(tags=streams.get('Tags'))
         except Exception as e:
             logger.error(e)
             exit(1)
     else:
         try:
-            if args.name:
-                stack_name = args.name
-            else:
-                stack_name = os.path.splitext(str(args.stack_file))[0]
-            if args.tags:
-                tags = str_tags_to_cf_params(tags=args.tags)
-            else:
-                tags = []
             if args.var:
                 dict_params = dict(kv.split("=") for kv in args.var.split(","))
                 params = to_cf_params(params=dict_params)
