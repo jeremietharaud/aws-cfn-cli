@@ -4,3 +4,4 @@ Tags:
   Env: 'tst'
   Name: 'test-stack'
 Variables:
+  RepositoryName: 'test-123'

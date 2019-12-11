@@ -1,3 +1,9 @@
+## 1.0.1 (December 12th, 2019)
+
+FEATURES:
+
+* Add support for json parameter file using `--var-file` option
+
 ## 1.0.0 (November 7th, 2019)
 
 First release
