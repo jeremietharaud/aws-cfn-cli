@@ -1,3 +1,9 @@
+## 1.0.2 (January 8th, 2020)
+
+BUG FIXES:
+
+* Fix incorrect detection of changes during planning that was causing `No change detected` message in some cases
+
 ## 1.0.1 (December 12th, 2019)
 
 FEATURES:

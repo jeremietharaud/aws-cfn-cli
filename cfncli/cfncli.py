@@ -78,7 +78,7 @@ def create_change_set_cfn(stack_name: str, template: TextIO, region: str, change
 def describe_change_set_cfn(stack_name: str, region: str, change_set_name: str):
     client = boto3.client('cloudformation', region_name=region)
     change_set = client.describe_change_set(StackName=stack_name, ChangeSetName=change_set_name)
-    return change_set['Changes']
+    return change_set['Changes'], change_set['ExecutionStatus']
 
 
 def wait_creation_change_set_cfn(stack_name: str, change_set_name: str, region: str, timeout: int) -> None:
@@ -332,17 +332,14 @@ def plan(stack_name: str,  stack_file: str, region: str, params: list, tags: lis
             if stack is None:
                 delete_cfn_stack(stack_name=stack_name, region=region, silent=True)
             exit(1)
-        change_list = describe_change_set_cfn(stack_name=stack_name, region=region, change_set_name=change_set)
-        if len(change_list) > 0:
+        change_list, execution_status = describe_change_set_cfn(stack_name=stack_name, region=region, change_set_name=change_set)
+        if execution_status == 'AVAILABLE':
             logger.info('List of changes:')
             logger.info('\n' + json.dumps(change_list, indent=4, sort_keys=True))
             if keep_plan:
                 return change_set
         else:
             logger.info('No change detected')
-            if change_set_type == 'CREATE':
-                if keep_plan:
-                    return change_set
         delete_change_set_cfn(stack_name=stack_name, region=region, change_set_name=change_set)
         if stack is None:
             delete_cfn_stack(stack_name=stack_name, region=region, silent=True)
