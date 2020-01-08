@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: 'Test stack that works'
+Parameters:
+    RepositoryName:
+      Description: 'Name of the ECR repository'
+      Type: String
+Resources:
+  TestEcrRepository:
+    Type: 'AWS::ECR::Repository'
+    Properties:
+      RepositoryName: !Ref RepositoryName
+Outputs:
+  Output:
+    Description: 'Example of output'
+    Value: !Ref RepositoryName
+    Export:
+      Name: 'RepositoryName'
