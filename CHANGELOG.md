@@ -1,3 +1,13 @@
+## 1.0.3 (Unreleased)
+
+FEATURES:
+
+* Add `--assume-role-arn` option for assuming an IAM role using the supplied credentials (perform an AssumeRole call to AWS STS)
+
+BUG FIXES:
+
+* Fix unhandled error when stack file is empty
+
 ## 1.0.2 (January 8th, 2020)
 
 BUG FIXES:
