@@ -47,6 +47,8 @@ cfncli option
 
  * --name stack-name: name of the stack to deploy. By default, it uses the stack file name (without extension)
 
+ * --assume-role-arn: arn of the AWS IAM role to assume for receiving temporary permissions
+
  * --plan: for planning changes on a CFN stack (already existing or new stack). It generates a change set and displays the changes.
 
  * --apply: for applying changes on a CFN stack. A change set is generated then executed.
