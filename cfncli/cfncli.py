@@ -182,10 +182,10 @@ def describe_cfn_stack_resources(stack_name: str, client: Client) -> list:
     return resources
 
 
-def wait_creation_cfn_stack(stack_name: str, client: Client, timeout: int) -> None:
+def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: int, operation: str) -> None:
     # Wait fastly
     for x in range(1, 10):
-        logger.info("Creation in progress... (%s seconds)" % (x))
+        logger.info("%s in progress... (%s seconds)" % (operation, x))
         stack = get_cfn_stack(stack_name=stack_name, client=client)
         if stack is None:
             logger.error('Stack not found.')
@@ -198,14 +198,14 @@ def wait_creation_cfn_stack(stack_name: str, client: Client, timeout: int) -> No
         if 'StackStatusReason' in stack:
             logger.error(stack['StackStatusReason'])
         else:
-            logger.error('Creation has failed...')
+            logger.error("%s has failed..." % (operation))
         wait_rollback_cfn_stack(stack_name=stack_name, client=client, timeout=timeout)
         exit(1)
     if stack_status in ['CREATE_COMPLETE', 'UPDATE_COMPLETE']:
         return
     # Wait slowly
     for x in range(1, int(timeout/10)):
-        logger.info("Creation in progress... (%s0 seconds)" % (x))
+        logger.info("%s in progress... (%s0 seconds)" % (operation, x))
         stack = get_cfn_stack(stack_name=stack_name, client=client)
         if stack is None:
             logger.error('Stack no found.')
@@ -218,7 +218,7 @@ def wait_creation_cfn_stack(stack_name: str, client: Client, timeout: int) -> No
         if 'StackStatusReason' in stack:
             logger.error(stack['StackStatusReason'])
         else:
-            logger.error('Creation has failed...')
+            logger.error("%s has failed..." % (operation) )
         wait_rollback_cfn_stack(stack_name=stack_name, client=client, timeout=timeout)
         exit(1)
     if stack_status in ['CREATE_COMPLETE', 'UPDATE_COMPLETE']:
@@ -331,7 +331,7 @@ def validate(stack_name: str,  stack_file: str, client: Client) -> None:
         logger.info("Stack validated")
 
 
-def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: list, keep_plan: bool) -> str:
+def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: list, keep_plan: bool) -> tuple:
     logger.info("Starting plan of the stack %s" % (stack_name))
     stack = get_cfn_stack(stack_name=stack_name, client=client)
     if stack is None:
@@ -358,7 +358,7 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: 
             logger.info('List of changes:')
             logger.info('\n' + json.dumps(change_list, indent=4, sort_keys=True))
             if keep_plan:
-                return change_set
+                return change_set, change_set_type
         else:
             logger.info('No change detected')
         delete_change_set_cfn(stack_name=stack_name, client=client, change_set_name=change_set)
@@ -367,11 +367,18 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: 
         return None
 
 
-def apply(stack_name: str, change_set_name: str, client: Client, auto_approve: bool) -> None:
-    logger.info("Starting deployment of the stack %s" % (stack_name))
-    execute_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client)
-    wait_creation_cfn_stack(stack_name=stack_name, client=client, timeout=1800)
-    logger.info("Stack deployed")
+def apply(stack_name: str, change_set_name: str, change_set_type: str, client: Client, auto_approve: bool) -> None:
+    if change_set_type == 'CREATE':
+        logger.info("Starting creation of the stack %s" % (stack_name))
+        execute_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client)
+        wait_create_or_update_cfn_stack(stack_name=stack_name, client=client, timeout=1800, operation='Creation')
+        logger.info("Stack created")
+    else:
+        logger.info("Starting update of the stack %s" % (stack_name))
+        execute_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client)
+        wait_create_or_update_cfn_stack(stack_name=stack_name, client=client, timeout=1800, operation='Update')
+        logger.info("Stack updated")
+    
 
 
 def destroy(stack_name: str, client: Client, auto_approve: bool) -> None:
@@ -483,9 +490,9 @@ def main():
 
     if args.apply:
         client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        change_set = plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=True, params=params, tags=tags)
+        (change_set, change_set_type) = plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=True, params=params, tags=tags)
         if change_set is not None:
-            apply(stack_name=stack_name, change_set_name=change_set, client=client, auto_approve=args.auto_approve)
+            apply(stack_name=stack_name, change_set_name=change_set, change_set_type=change_set_type, client=client, auto_approve=args.auto_approve)
         exit(0)
 
     if args.destroy:
