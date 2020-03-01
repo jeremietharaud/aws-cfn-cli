@@ -1,3 +1,9 @@
+## 1.0.4 (March 1, 2020)
+
+IMPROVEMENTS:
+
+* Update logging message when creating/updating a stack
+
 ## 1.0.3 (January 30, 2020)
 
 FEATURES:
@@ -8,19 +14,19 @@ BUG FIXES:
 
 * Fix unhandled error when stack file is empty
 
-## 1.0.2 (January 8th, 2020)
+## 1.0.2 (January 8, 2020)
 
 BUG FIXES:
 
 * Fix incorrect detection of changes during planning that was causing `No change detected` message in some cases
 
-## 1.0.1 (December 12th, 2019)
+## 1.0.1 (December 12, 2019)
 
 FEATURES:
 
 * Add support for json parameter file using `--var-file` option
 
-## 1.0.0 (November 7th, 2019)
+## 1.0.0 (November 7, 2019)
 
 First release
 
