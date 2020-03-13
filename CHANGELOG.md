@@ -1,3 +1,9 @@
+## 1.0.5 (March 13, 2020)
+
+BUG FIXES:
+
+* Fix `Cannot unpack non-iterable NoneType object` error when applying a stack without change 
+
 ## 1.0.4 (March 1, 2020)
 
 IMPROVEMENTS:

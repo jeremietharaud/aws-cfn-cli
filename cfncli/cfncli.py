@@ -364,7 +364,7 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: 
         delete_change_set_cfn(stack_name=stack_name, client=client, change_set_name=change_set)
         if stack is None:
             delete_cfn_stack(stack_name=stack_name, client=client, silent=True)
-        return None
+        return None, change_set_type
 
 
 def apply(stack_name: str, change_set_name: str, change_set_type: str, client: Client, auto_approve: bool) -> None:
