@@ -1,3 +1,9 @@
+## 1.0.6 (March 30, 2020)
+
+FEATURES:
+
+* Add `--output` option for displaying stack outputs and show by default the outputs of the stack (if defined) during apply
+
 ## 1.0.5 (March 13, 2020)
 
 BUG FIXES:
