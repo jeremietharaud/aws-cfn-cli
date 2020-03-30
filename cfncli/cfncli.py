@@ -218,7 +218,7 @@ def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: in
         if 'StackStatusReason' in stack:
             logger.error(stack['StackStatusReason'])
         else:
-            logger.error("%s has failed..." % (operation) )
+            logger.error("%s has failed..." % (operation))
         wait_rollback_cfn_stack(stack_name=stack_name, client=client, timeout=timeout)
         exit(1)
     if stack_status in ['CREATE_COMPLETE', 'UPDATE_COMPLETE']:
@@ -320,6 +320,16 @@ def delete_cfn_stack(stack_name: str, client: Client, silent: bool) -> None:
         wait_deletion_cfn_stack(stack_name=stack_name, client=client, timeout=1800, silent=silent)
 
 
+def display_outputs(stack_name: str, client: Client) -> None:
+    stack = get_cfn_stack(stack_name=stack_name, client=client)
+    if 'Outputs' in stack:
+        outputs = stack['Outputs']
+        output_list = ''
+        for output in outputs:
+            output_list += '   %s = %s' % (output['ExportName'], output['OutputValue'])
+        logger.info('\nOutputs:\n\n' + output_list)
+
+
 def validate(stack_name: str,  stack_file: str, client: Client) -> None:
     logger.info("Starting plan of the stack %s" % (stack_name))
     with open(stack_file, 'r') as template:
@@ -378,7 +388,6 @@ def apply(stack_name: str, change_set_name: str, change_set_type: str, client: C
         execute_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client)
         wait_create_or_update_cfn_stack(stack_name=stack_name, client=client, timeout=1800, operation='Update')
         logger.info("Stack updated")
-    
 
 
 def destroy(stack_name: str, client: Client, auto_approve: bool) -> None:
@@ -428,6 +437,7 @@ def main():
     parser.add_argument('--apply', action="store_true", help='Launch the deployment of the stack')
     parser.add_argument('--destroy', action="store_true", help='Launch the deletion of the stack')
     parser.add_argument('--auto-approve', action="store_true", help='Auto approve the deployment')
+    parser.add_argument('--output', action="store_true", help='Show stack output')
 
     args = parser.parse_args()
 
@@ -493,6 +503,17 @@ def main():
         (change_set, change_set_type) = plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=True, params=params, tags=tags)
         if change_set is not None:
             apply(stack_name=stack_name, change_set_name=change_set, change_set_type=change_set_type, client=client, auto_approve=args.auto_approve)
+        display_outputs(stack_name=stack_name, client=client)
+        exit(0)
+
+    if args.output:
+        client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
+        stack = get_cfn_stack(stack_name=stack_name, client=client)
+        if stack is not None:
+            display_outputs(stack_name=stack_name, client=client)
+        else:
+            logger.error('Stack not found.')
+            exit(1)
         exit(0)
 
     if args.destroy:
