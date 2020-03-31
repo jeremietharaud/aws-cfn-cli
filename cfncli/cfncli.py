@@ -188,7 +188,7 @@ def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: in
         logger.info("%s in progress... (%s seconds)" % (operation, x))
         stack = get_cfn_stack(stack_name=stack_name, client=client)
         if stack is None:
-            logger.error('Stack not found.')
+            logger.error("Stack '%s' not found in %s" % (stack_name, client._client_config.region_name))
             exit(1)
         stack_status = stack['StackStatus']
         if stack_status in cfn_status_create_complete_list:
@@ -321,7 +321,14 @@ def delete_cfn_stack(stack_name: str, client: Client, silent: bool) -> None:
 
 
 def display_outputs(stack_name: str, client: Client) -> None:
-    stack = get_cfn_stack(stack_name=stack_name, client=client)
+    try:
+        stack = get_cfn_stack(stack_name=stack_name, client=client)
+    except ClientError as e:
+        logger.error(e.response.get("Error").get("Message"))
+        exit(1)
+    if stack is None:
+        logger.error("Stack '%s' not found in %s" % (stack_name, client._client_config.region_name))
+        exit(1)
     if 'Outputs' in stack:
         outputs = stack['Outputs']
         output_list = ''
@@ -330,8 +337,21 @@ def display_outputs(stack_name: str, client: Client) -> None:
         logger.info('\nOutputs:\n\n' + output_list)
 
 
+def list_running_stacks(client: Client) -> None:
+    try:
+        stacks_iterator = client.get_paginator('describe_stacks').paginate()
+    except ClientError as e:
+        logger.error(e.response.get("Error").get("Message"))
+        exit(1)
+    list_running_stacks = ''
+    for stacks in stacks_iterator:
+        for stack in stacks['Stacks']:
+            list_running_stacks += '%s | %s\n' % (stack['StackName'], stack['StackStatus'])
+    logger.info('Cloudformation stacks in %s:\n%s' % (client._client_config.region_name, list_running_stacks))
+
+
 def validate(stack_name: str,  stack_file: str, client: Client) -> None:
-    logger.info("Starting plan of the stack %s" % (stack_name))
+    logger.info("Starting validation of the stack '%s' in %s" % (stack_name, client._client_config.region_name))
     with open(stack_file, 'r') as template:
         try:
             validate_cfn_stack(template=template, client=client)
@@ -342,8 +362,12 @@ def validate(stack_name: str,  stack_file: str, client: Client) -> None:
 
 
 def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: list, keep_plan: bool) -> tuple:
-    logger.info("Starting plan of the stack %s" % (stack_name))
-    stack = get_cfn_stack(stack_name=stack_name, client=client)
+    logger.info("Starting plan of the stack '%s' in %s" % (stack_name, client._client_config.region_name))
+    try:
+        stack = get_cfn_stack(stack_name=stack_name, client=client)
+    except ClientError as e:
+        logger.error(e.response.get("Error").get("Message"))
+        exit(1)
     if stack is None:
         change_set_type = 'CREATE'
     else:
@@ -379,20 +403,24 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: list, tags: 
 
 def apply(stack_name: str, change_set_name: str, change_set_type: str, client: Client, auto_approve: bool) -> None:
     if change_set_type == 'CREATE':
-        logger.info("Starting creation of the stack %s" % (stack_name))
+        logger.info("Starting creation of the stack '%s' in %s" % (stack_name, client._client_config.region_name))
         execute_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client)
         wait_create_or_update_cfn_stack(stack_name=stack_name, client=client, timeout=1800, operation='Creation')
         logger.info("Stack created")
     else:
-        logger.info("Starting update of the stack %s" % (stack_name))
+        logger.info("Starting update of the stack '%s' in %s" % (stack_name, client._client_config.region_name))
         execute_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client)
         wait_create_or_update_cfn_stack(stack_name=stack_name, client=client, timeout=1800, operation='Update')
         logger.info("Stack updated")
 
 
 def destroy(stack_name: str, client: Client, auto_approve: bool) -> None:
-    logger.info("Starting deletion of the stack %s" % (stack_name))
-    stack = get_cfn_stack(stack_name=stack_name, client=client)
+    logger.info("Starting deletion of the stack '%s' in %s" % (stack_name, client._client_config.region_name))
+    try:
+        stack = get_cfn_stack(stack_name=stack_name, client=client)
+    except ClientError as e:
+        logger.error(e.response.get("Error").get("Message"))
+        exit(1)
     if stack is not None:
         resources = describe_cfn_stack_resources(stack_name=stack_name, client=client)
         logger.info('The following resources are going to be removed:')
@@ -406,8 +434,19 @@ def destroy(stack_name: str, client: Client, auto_approve: bool) -> None:
         logger.info("Stack does not exist or is already deleted, nothing to do")
 
 
+# Extension of argparse.Action class
+class ListRunningStacks(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        super(ListRunningStacks, self).__init__(option_strings, dest, nargs, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        client = get_cfn_client_session(region=namespace.region, assume_role_arn=namespace.assume_role_arn)
+        list_running_stacks(client=client)
+        exit(0)
+
+
 def main():
-    parser = argparse.ArgumentParser(description='Deploy the stack with CloudFormation')
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         '-v', '--version', action='version',
         version=__version__, help="Show cfncli's version number and exit.")
@@ -438,6 +477,7 @@ def main():
     parser.add_argument('--destroy', action="store_true", help='Launch the deletion of the stack')
     parser.add_argument('--auto-approve', action="store_true", help='Auto approve the deployment')
     parser.add_argument('--output', action="store_true", help='Show stack output')
+    parser.add_argument('--ls', action=ListRunningStacks, help='List running CloudFormation stacks', nargs=0)
 
     args = parser.parse_args()
 
@@ -508,12 +548,7 @@ def main():
 
     if args.output:
         client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        stack = get_cfn_stack(stack_name=stack_name, client=client)
-        if stack is not None:
-            display_outputs(stack_name=stack_name, client=client)
-        else:
-            logger.error('Stack not found.')
-            exit(1)
+        display_outputs(stack_name=stack_name, client=client)
         exit(0)
 
     if args.destroy:
