@@ -1,3 +1,14 @@
+## 1.0.7 (April 2, 2020)
+
+FEATURES:
+
+* Add `--ls` option for displaying all running stacks
+
+IMPROVEMENTS:
+
+* Update logging message when creating/updating/destroying a stack
+* Better catch exception in case of ClientError exception
+
 ## 1.0.6 (March 30, 2020)
 
 FEATURES:

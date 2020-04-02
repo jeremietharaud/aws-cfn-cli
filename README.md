@@ -63,6 +63,8 @@ cfncli option
 
  * --output: Displays outputs of the stack.
 
+ * --ls: Displays the list of running Cloudformation stacks (`--stack-file` option is not mandatory in this case).
+
  ## Default timeout
 
  The default timeout for the creation/update/deletion of a stack is `30` minutes.
