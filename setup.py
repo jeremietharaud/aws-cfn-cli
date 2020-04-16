@@ -20,6 +20,12 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
+def find_required():
+    with open('requirements.txt') as f:
+        required = f.read().splitlines()
+    return required
+
+
 setup(
     name="cfncli",
     version=find_version("cfncli", "__init__.py"),
@@ -40,10 +46,7 @@ setup(
         cfncli=cfncli.cfncli:main
     ''',
     license='Apache',
-    install_requires=[
-        'PyYAML',
-        'boto3',
-    ],
+    install_requires=find_required(),
     include_package_data=True,
     zip_safe=False
 )
