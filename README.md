@@ -1,3 +1,4 @@
+![Build](https://github.com/jeremietharaud/aws-cfn-cli/workflows/Build%20and%20test%20aws-cfn-cli/badge.svg?branch=master)
 # aws-cfn-cli
 
 This repository is used to provide a tool for deploying AWS CloudFormation stacks.
