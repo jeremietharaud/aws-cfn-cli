@@ -10,7 +10,11 @@ import os
 import boto3
 from botocore.exceptions import ClientError, ParamValidationError
 from botocore import client as Client
-from cfncli import __version__ as version
+try:
+    from cfncli import __version__ as version
+except ImportError:
+    from __init__ import __version__ as version
+
 __version__ = version
 
 logging.basicConfig()
@@ -29,6 +33,14 @@ cfn_stack_status_error_list = ['CREATE_FAILED', 'ROLLBACK_IN_PROGRESS', 'UPDATE_
 def to_cf_params(params: dict) -> list:
     if params is not None:
         return [{'ParameterKey': k, 'ParameterValue': v} for (k, v) in params.items()]
+    else:
+        return []
+
+
+def str_to_cf_params(params: str) -> list:
+    dict_params = dict(kv.split("=") for kv in params.split(","))
+    if params is not None:
+        return [{'ParameterKey': k, 'ParameterValue': v} for (k, v) in dict_params.items()]
     else:
         return []
 
@@ -339,6 +351,7 @@ def display_outputs(stack_name: str, client: Client) -> None:
 
 def list_running_stacks(client: Client) -> None:
     try:
+        client.describe_stacks()
         stacks_iterator = client.get_paginator('describe_stacks').paginate()
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
@@ -494,7 +507,11 @@ def main():
         stack_name = os.path.splitext(str(args.stack_file))[0]
 
     if args.tags:
-        tags = str_tags_to_cf_params(tags=args.tags)
+        try:
+            tags = str_tags_to_cf_params(tags=args.tags)
+        except Exception as e:
+            logger.error(e)
+            exit(1)
     else:
         tags = []
 
@@ -517,15 +534,14 @@ def main():
             logger.error(e)
             exit(1)
     else:
-        try:
-            if args.var:
-                dict_params = dict(kv.split("=") for kv in args.var.split(","))
-                params = to_cf_params(params=dict_params)
-            else:
-                params = []
-        except Exception as e:
-            logger.error(e)
-            exit(1)
+        if args.var:
+            try:
+                params = str_to_cf_params(params=args.var)
+            except Exception as e:
+                logger.error(e)
+                exit(1)
+        else:
+            params = []
 
     if args.validate:
         client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)

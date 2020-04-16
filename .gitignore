@@ -4,6 +4,14 @@
 # Setuptools distribution folder.
 /dist/
 /build/
+/tests/build/
+/tests/dist/
+/tests/*.egg-info
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+/cfncli/__pycache__
+.pytest_cache/
+
+# VS Code metadata
+.vscode/
