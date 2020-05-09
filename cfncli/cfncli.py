@@ -79,7 +79,8 @@ def get_cfn_client_session(region: str, assume_role_arn: str) -> Client:
             'cloudformation',
             aws_access_key_id=credentials['AccessKeyId'],
             aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken']
+            aws_session_token=credentials['SessionToken'],
+            region_name=region
         )
     else:
         client: Client = boto3.client('cloudformation', region_name=region)
