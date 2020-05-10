@@ -70,10 +70,10 @@ def get_cfn_client_session(region: str, assume_role_arn: str) -> Client:
             )
         except ClientError as e:
             logger.error(e.response.get("Error").get("Message"))
-            exit(1)
+            raise
         except ParamValidationError as e:
             logger.error(e)
-            exit(1)
+            raise
         credentials = assumed_role_object['Credentials']
         client: Client = boto3.client(
             'cloudformation',
@@ -94,7 +94,7 @@ def validate_cfn_stack(template: str, client: Client) -> None:
         raise e
     except ParamValidationError as e:
         logger.error(e)
-        exit(1)
+        raise
 
 
 def create_change_set_cfn(stack_name: str, template: str, client: Client, change_set_type: str, params: List[Dict[str, str]], tags: List[Dict[str, str]]) -> str: # noqa E501
@@ -157,7 +157,7 @@ def wait_creation_change_set_cfn(stack_name: str, change_set_name: str, client: 
                 raise ClientError(error_response, 'CreateChangeSet')
         else:
             logger.error("Timeout error")
-            exit(1)
+            raise
 
 
 def execute_change_set_cfn(stack_name: str, client: Client, change_set_name: str) -> None:
@@ -166,7 +166,7 @@ def execute_change_set_cfn(stack_name: str, client: Client, change_set_name: str
         wait_creation_change_set_cfn(stack_name=stack_name, change_set_name=change_set_name, client=client, timeout=600)
     except ClientError as e:
         logger.error(e)
-        exit(1)
+        raise
 
 
 def delete_change_set_cfn(stack_name: str, client: Client, change_set_name: str) -> None:
@@ -202,7 +202,7 @@ def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: in
         stack: Dict[str, str] = get_cfn_stack(stack_name=stack_name, client=client)
         if stack is None:
             logger.error(f"Stack '{stack_name}' not found in {client._client_config.region_name}")
-            exit(1)
+            raise
         stack_status: str = stack['StackStatus']
         if stack_status in cfn_status_create_complete_list:
             break
@@ -213,7 +213,7 @@ def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: in
         else:
             logger.error(f"{operation} has failed...")
         wait_rollback_cfn_stack(stack_name=stack_name, client=client, timeout=timeout)
-        exit(1)
+        raise
     if stack_status in ['CREATE_COMPLETE', 'UPDATE_COMPLETE']:
         return
     # Wait slowly
@@ -222,7 +222,7 @@ def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: in
         stack: Dict[str, str] = get_cfn_stack(stack_name=stack_name, client=client)
         if stack is None:
             logger.error("Stack no found.")
-            exit(1)
+            raise
         stack_status: str = stack['StackStatus']
         if stack_status in cfn_status_create_complete_list:
             break
@@ -233,12 +233,12 @@ def wait_create_or_update_cfn_stack(stack_name: str, client: Client, timeout: in
         else:
             logger.error(f"{operation} has failed...")
         wait_rollback_cfn_stack(stack_name=stack_name, client=client, timeout=timeout)
-        exit(1)
+        raise
     if stack_status in ['CREATE_COMPLETE', 'UPDATE_COMPLETE']:
         return
     else:
         logger.error("Timeout error")
-        exit(1)
+        raise
 
 
 def wait_rollback_cfn_stack(stack_name: str, client: Client, timeout: int) -> None:
@@ -285,7 +285,7 @@ def wait_rollback_cfn_stack(stack_name: str, client: Client, timeout: int) -> No
         return
     else:
         logger.error("Timeout error")
-        exit(1)
+        raise
 
 
 def wait_deletion_cfn_stack(stack_name: str, client: Client, timeout: int, silent: bool) -> None:
@@ -302,7 +302,7 @@ def wait_deletion_cfn_stack(stack_name: str, client: Client, timeout: int, silen
         time.sleep(1)
     if stack_status == 'DELETE_FAILED':
         logger.error(stack['StackStatusReason'])
-        exit(1)
+        raise
     if stack_status == 'DELETE_COMPLETE':
         return
     # Wait slowly
@@ -318,12 +318,12 @@ def wait_deletion_cfn_stack(stack_name: str, client: Client, timeout: int, silen
         time.sleep(10)
     if stack_status == 'DELETE_FAILED':
         logger.error(stack['StackStatusReason'])
-        exit(1)
+        raise
     if stack_status == 'DELETE_COMPLETE':
         return
     else:
         logger.error("Timeout error")
-        exit(1)
+        raise
 
 
 def delete_cfn_stack(stack_name: str, client: Client, silent: bool) -> None:
@@ -338,10 +338,10 @@ def display_outputs(stack_name: str, client: Client) -> None:
         stack: Dict[str, str] = get_cfn_stack(stack_name=stack_name, client=client)
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
-        exit(1)
+        raise
     if stack is None:
         logger.error(f"Stack '{stack_name}' not found in {client._client_config.region_name}")
-        exit(1)
+        raise
     if 'Outputs' in stack:
         outputs: List[Dict[str, str]] = stack['Outputs']
         output_list = ''
@@ -356,7 +356,7 @@ def list_running_stacks(client: Client) -> None:
         stacks_iterator = client.get_paginator('describe_stacks').paginate()
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
-        exit(1)
+        raise
     list_running_stacks = ''
     for stacks in stacks_iterator:
         for stack in stacks['Stacks']:
@@ -371,7 +371,7 @@ def validate(stack_name: str,  stack_file: str, client: Client) -> None:
             validate_cfn_stack(template=template.read(), client=client)
         except ClientError as e:
             logger.error(e.response.get("Error").get("Message"))
-            exit(1)
+            raise
         logger.info("Stack validated")
 
 
@@ -381,7 +381,7 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: List[Dict[st
         stack: Dict[str, str] = get_cfn_stack(stack_name=stack_name, client=client)
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
-        exit(1)
+        raise
     if stack is None:
         change_set_type: str = 'CREATE'
     else:
@@ -400,7 +400,7 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: List[Dict[st
             logger.error(e)
             if stack is None:
                 delete_cfn_stack(stack_name=stack_name, client=client, silent=True)
-            exit(1)
+            raise
         change_list, execution_status = describe_change_set_cfn(stack_name=stack_name, client=client, change_set_name=change_set)
         if execution_status == 'AVAILABLE':
             logger.info("List of changes:")
@@ -434,7 +434,7 @@ def destroy(stack_name: str, client: Client, auto_approve: bool) -> None:
         stack: Dict[str, str] = get_cfn_stack(stack_name=stack_name, client=client)
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
-        exit(1)
+        raise
     if stack is not None:
         resources: List[Dict[str, str]] = describe_cfn_stack_resources(stack_name=stack_name, client=client)
         logger.info("The following resources are going to be removed:")
@@ -454,7 +454,10 @@ class ListRunningStacks(argparse.Action):
         super(ListRunningStacks, self).__init__(option_strings, dest, nargs, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        client: Client = get_cfn_client_session(region=namespace.region, assume_role_arn=namespace.assume_role_arn)
+        try:
+            client: Client = get_cfn_client_session(region=namespace.region, assume_role_arn=namespace.assume_role_arn)
+        except Exception:
+            exit(1)
         list_running_stacks(client=client)
         exit(0)
 
@@ -545,32 +548,47 @@ def main():
             params = []
 
     if args.validate:
-        client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        validate(stack_name=stack_name, stack_file=args.stack_file, client=client)
+        try:
+            client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
+            validate(stack_name=stack_name, stack_file=args.stack_file, client=client)
+        except Exception:
+            exit(1)
         exit(0)
 
     if args.plan:
-        client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        validate(stack_name=stack_name, stack_file=args.stack_file, client=client)
-        plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=False, params=params, tags=tags)
+        try:
+            client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
+            validate(stack_name=stack_name, stack_file=args.stack_file, client=client)
+            plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=False, params=params, tags=tags)
+        except Exception:
+            exit(1)
         exit(0)
 
     if args.apply:
-        client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        (change_set, change_set_type) = plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=True, params=params, tags=tags)
-        if change_set is not None:
-            apply(stack_name=stack_name, change_set_name=change_set, change_set_type=change_set_type, client=client, auto_approve=args.auto_approve)
-        display_outputs(stack_name=stack_name, client=client)
+        try:
+            client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
+            (change_set, change_set_type) = plan(stack_name=stack_name, stack_file=args.stack_file, client=client, keep_plan=True, params=params, tags=tags)
+            if change_set is not None:
+                apply(stack_name=stack_name, change_set_name=change_set, change_set_type=change_set_type, client=client, auto_approve=args.auto_approve)
+            display_outputs(stack_name=stack_name, client=client)
+        except Exception:
+            exit(1)
         exit(0)
 
     if args.output:
-        client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        display_outputs(stack_name=stack_name, client=client)
+        try:
+            client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
+            display_outputs(stack_name=stack_name, client=client)
+        except Exception:
+            exit(1)
         exit(0)
 
     if args.destroy:
-        client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
-        destroy(stack_name=stack_name, auto_approve=args.auto_approve, client=client)
+        try:
+            client: Client = get_cfn_client_session(region=args.region, assume_role_arn=args.assume_role_arn)
+            destroy(stack_name=stack_name, auto_approve=args.auto_approve, client=client)
+        except Exception:
+            exit(1)
         exit(0)
 
     parser.print_help()

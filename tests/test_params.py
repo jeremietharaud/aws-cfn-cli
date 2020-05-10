@@ -1,7 +1,6 @@
 import cfncli.cfncli as cfncli
 import yaml
 from typing import Dict, List
-import pytest
 
 
 yaml_variables = """
@@ -57,9 +56,11 @@ def test_str_tags_to_cf_params() -> None:
     expected_tags: List[Dict[str, str]] = [{'Key': 'Project', 'Value': 'cfncli'}, {'Key': 'Env', 'Value': 'tst'}, {'Key': 'Name', 'Value': 'test-stack'}]
 
     # Test empty param list
-    with pytest.raises(Exception) as excinfo:
+    try:
         cfncli.str_tags_to_cf_params(empty_tags)
-        assert excinfo == 'dictionary update sequence element #0 has length 1; 2 is required'
+        assert False
+    except Exception as e:
+        assert str(e) == 'dictionary update sequence element #0 has length 1; 2 is required'
 
     # Test tags
     assert cfncli.str_tags_to_cf_params(tags) == expected_tags
@@ -71,9 +72,11 @@ def test_str_to_cf_params() -> None:
     expected_params: List[Dict[str, str]] = [{'ParameterKey': 'RepositoryName', 'ParameterValue': 'test-123'}, {'ParameterKey': 'Stack', 'ParameterValue': 'test-stack'}] # noqa E501
 
     # Test empty param list
-    with pytest.raises(Exception) as excinfo:
+    try:
         cfncli.str_to_cf_params(empty_params)
-        assert excinfo == 'dictionary update sequence element #0 has length 1; 2 is required'
+        assert False
+    except Exception as e:
+        assert str(e) == 'dictionary update sequence element #0 has length 1; 2 is required'
 
     # Test params list
     assert cfncli.str_to_cf_params(params) == expected_params
