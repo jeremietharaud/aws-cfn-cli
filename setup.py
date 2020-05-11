@@ -31,7 +31,7 @@ setup(
     version=find_version("cfncli", "__init__.py"),
     author="Jeremie Tharaud",
     author_email="jeremie.tharaud@gmail.com",
-    description="A tool for deploying AWS CFN stacks",
+    description="Yet Another Friendly AWS CloudFormation CLI",
     long_description=read('README.md'),
     long_description_content_type="text/markdown",
     url="https://github.com/jeremietharaud/aws-cfn-cli",

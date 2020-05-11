@@ -34,6 +34,8 @@ When using the python script directly:
 cfncli option
 ```
 
+A complete example of usage of `cfncli` in a CI/CD pipeline can be found on the following [repository](https://github.com/jeremietharaud/aws-cfn-cli-example).
+
 ## Usage
 
 `cfncli` takes into account multiple arguments:

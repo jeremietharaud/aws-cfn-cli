@@ -1,3 +1,15 @@
+## 1.0.8 (Unreleased)
+
+IMPROVEMENTS:
+
+* Add some unit tests with pytest
+* Add github workflow for running code lint and tests
+* Better handle exceptions
+
+BUG FIXES:
+
+* Fix region parameter that was not propagated when using `--assume-role-arn` option
+
 ## 1.0.7 (April 2, 2020)
 
 FEATURES:
