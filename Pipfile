@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 flake8 = "*"
 pytest = "*"
+moto = "*"
 
 [packages]
 boto3 = "==1.12.39"
