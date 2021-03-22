@@ -23,7 +23,7 @@ def find_version(*file_paths):
 def find_required():
     with open('requirements.txt') as f:
         required = f.read().splitlines()
-    return required
+    return required[1:]
 
 
 setup(
