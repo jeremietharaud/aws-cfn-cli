@@ -21,7 +21,7 @@ def test_get_cfn_client_session_with_assume_role() -> None:
         assert False
     except botocore.exceptions.ParamValidationError as e:
         assert (
-            'Parameter validation failed:\nInvalid length for parameter RoleArn, value: 6, valid min length: 20' in str(e)
+            'Invalid length for parameter RoleArn, value: 6, valid min length: 20' in str(e)
         )
 
     # Test client with assume role

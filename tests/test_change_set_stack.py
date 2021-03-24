@@ -64,7 +64,7 @@ def test_create_change_set_cfn() -> None:
         cfncli.create_change_set_cfn(stack_name="test", template=yaml_bad_template, change_set_type='CREATE', params=None, tags=None, client=client)
         assert False
     except botocore.exceptions.ParamValidationError as e:
-        assert ('Parameter validation failed:\nInvalid length for parameter TemplateBody, value: 0, valid min length: 1' in str(e))
+        assert ('Invalid length for parameter TemplateBody, value: 0, valid min length: 1' in str(e))
 
     # Test creation of change set for invalid stack
     # Does not work with @mock_cloudformation: KeyError: 'Resources'

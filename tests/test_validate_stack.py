@@ -46,7 +46,7 @@ def test_validate_cfn_stack() -> None:
         cfncli.validate_cfn_stack(template=yaml_bad_template, client=client)
         assert False
     except botocore.exceptions.ParamValidationError as e:
-        assert ('Parameter validation failed:\nInvalid length for parameter TemplateBody, value: 0, valid min length: 1' in str(e))
+        assert ('Invalid length for parameter TemplateBody, value: 0, valid min length: 1' in str(e))
 
     # Test validation of invalid stac
     try:
@@ -71,7 +71,7 @@ def test_validate() -> None:
         cfncli.validate(stack_name="test", stack_file=yaml_bad_template_file, client=client)
         assert False
     except botocore.exceptions.ParamValidationError as e:
-        assert ('Parameter validation failed:\nInvalid length for parameter TemplateBody, value: 0, valid min length: 1' in str(e))
+        assert ('Invalid length for parameter TemplateBody, value: 0, valid min length: 1' in str(e))
     os.close(file_descriptor1)
     os.remove(yaml_bad_template_file)
 
