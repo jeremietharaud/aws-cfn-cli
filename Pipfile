@@ -8,6 +8,7 @@ flake8 = "*"
 pytest = "*"
 moto = "*"
 docker = "*"
+cfn-lint = "*"
 
 [packages]
 boto3 = "==1.17.36"
