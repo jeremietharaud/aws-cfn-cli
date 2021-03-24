@@ -53,7 +53,7 @@ def test_validate_cfn_stack() -> None:
         cfncli.validate_cfn_stack(template=yaml_bad_template2, client=client)
         assert False
     except botocore.exceptions.ClientError as e:
-        assert ('Stack with id Missing top level item Resources to file module does not exist' in str(e))
+        assert ('Stack with id Missing top level template section Resources does not exist' in str(e))
 
     # Test validation of valid stack
     assert cfncli.validate_cfn_stack(template=yaml_valid_template, client=client) is None
@@ -82,7 +82,7 @@ def test_validate() -> None:
     try:
         cfncli.validate(stack_name="test", stack_file=yaml_bad_template_file2, client=client)
     except botocore.exceptions.ClientError as e:
-        assert ('Stack with id Missing top level item Resources to file module does not exist' in str(e))
+        assert ('Stack with id Missing top level template section Resources does not exist' in str(e))
     os.close(file_descriptor2)
     os.remove(yaml_bad_template_file2)
 
