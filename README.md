@@ -26,7 +26,7 @@ pip install git+git://github.com/jeremietharaud/aws-cfn-cli.git
 
 When using Docker image, you can run `cfncli` using the following command:
 ```
-docker run --rm -i -v $PWD:/data jeremietharaud/cfncli cfncli
+docker run --rm -i -v $PWD:/data jeremietharaud/cfncli <arguments>
 ```
 
 When using the python script directly:

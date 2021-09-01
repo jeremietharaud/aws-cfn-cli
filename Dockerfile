@@ -1,10 +1,23 @@
-FROM python:alpine3.8
+FROM python:3.7.9-alpine3.13 as builder
 
-COPY . /cfncli
+RUN mkdir -p /src
+WORKDIR /src
 
-RUN \
-	cd /cfncli && \
-	python setup.py install
+COPY . /src
+
+RUN mkdir -p /install/lib/python3.7/site-packages/
+
+ENV PYTHONPATH ${PYTHONPATH}:/install/lib/python3.7/site-packages
+
+RUN python setup.py install --prefix=/install
+
+FROM gcr.io/distroless/python3
 
 WORKDIR /data
-ENTRYPOINT ["/usr/local/bin/cfncli"]
+
+COPY --from=builder /usr/local/lib/python3.7/site-packages /usr/local/lib/python3.7/site-packages
+COPY --from=builder /install /usr/local
+
+ENV PYTHONPATH /usr/local/lib/python3.7/site-packages
+
+ENTRYPOINT ["python", "/usr/local/bin/cfncli"]

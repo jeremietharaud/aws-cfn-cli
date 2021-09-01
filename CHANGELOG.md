@@ -5,6 +5,7 @@ IMPROVEMENTS:
 * Add some unit tests with pytest
 * Add github workflow for running code lint and tests
 * Better handle exceptions
+* Use of distroless image instead of Alpine
 
 BUG FIXES:
 
