@@ -20,4 +20,6 @@ COPY --from=builder /install /usr/local
 
 ENV PYTHONPATH /usr/local/lib/python3.7/site-packages
 
+CMD ["/usr/local/bin/cfncli", "-h"]
+
 ENTRYPOINT ["python", "/usr/local/bin/cfncli"]

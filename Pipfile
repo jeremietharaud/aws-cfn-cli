@@ -11,9 +11,10 @@ docker = "*"
 cfn-lint = "*"
 
 [packages]
-boto3 = "==1.17.36"
+boto3 = "==1.18.36"
 pyyaml = "==5.4.1"
-docutils = "==0.16"
+docutils = "==0.17.1"
+urllib3 = "==1.26.6"
 
 [requires]
 python_version = "3.7"
