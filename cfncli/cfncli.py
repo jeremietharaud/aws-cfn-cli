@@ -68,22 +68,35 @@ def get_cfn_client_session(region: str, assume_role_arn: str) -> Client:
                 RoleArn=assume_role_arn,
                 RoleSessionName="AssumeRoleSession1"
             )
+            credentials = assumed_role_object['Credentials']
+            client: Client = boto3.client(
+                'cloudformation',
+                aws_access_key_id=credentials['AccessKeyId'],
+                aws_secret_access_key=credentials['SecretAccessKey'],
+                aws_session_token=credentials['SessionToken'],
+                region_name=region
+            )
         except ClientError as e:
             logger.error(e.response.get("Error").get("Message"))
             raise
         except ParamValidationError as e:
             logger.error(e)
             raise
-        credentials = assumed_role_object['Credentials']
-        client: Client = boto3.client(
-            'cloudformation',
-            aws_access_key_id=credentials['AccessKeyId'],
-            aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken'],
-            region_name=region
-        )
+        except Exception as e:
+            logger.error(e)
+            raise
     else:
-        client: Client = boto3.client('cloudformation', region_name=region)
+        try:
+            client: Client = boto3.client('cloudformation', region_name=region)
+        except ClientError as e:
+            logger.error(e.response.get("Error").get("Message"))
+            raise
+        except ParamValidationError as e:
+            logger.error(e)
+            raise
+        except Exception as e:
+            logger.error(e)
+            raise
     return client
 
 
@@ -93,6 +106,9 @@ def validate_cfn_stack(template: str, client: Client) -> None:
     except ClientError as e:
         raise e
     except ParamValidationError as e:
+        logger.error(e)
+        raise
+    except Exception as e:
         logger.error(e)
         raise
 
@@ -339,6 +355,9 @@ def display_outputs(stack_name: str, client: Client) -> None:
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
         raise
+    except Exception as e:
+        logger.error(e)
+        raise
     if stack is None:
         logger.error(f"Stack '{stack_name}' not found in {client._client_config.region_name}")
         raise
@@ -357,6 +376,9 @@ def list_running_stacks(client: Client) -> None:
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
         raise
+    except Exception as e:
+        logger.error(e)
+        raise
     list_running_stacks = ''
     for stacks in stacks_iterator:
         for stack in stacks['Stacks']:
@@ -372,6 +394,9 @@ def validate(stack_name: str,  stack_file: str, client: Client) -> None:
         except ClientError as e:
             logger.error(e.response.get("Error").get("Message"))
             raise
+        except Exception as e:
+            logger.error(e)
+            raise
         logger.info("Stack validated")
 
 
@@ -381,6 +406,9 @@ def plan(stack_name: str,  stack_file: str, client: Client, params: List[Dict[st
         stack: Dict[str, str] = get_cfn_stack(stack_name=stack_name, client=client)
     except ClientError as e:
         logger.error(e.response.get("Error").get("Message"))
+        raise
+    except Exception as e:
+        logger.error(e)
         raise
     if stack is None:
         change_set_type: str = 'CREATE'
@@ -456,9 +484,9 @@ class ListRunningStacks(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         try:
             client: Client = get_cfn_client_session(region=namespace.region, assume_role_arn=namespace.assume_role_arn)
+            list_running_stacks(client=client)
         except Exception:
             exit(1)
-        list_running_stacks(client=client)
         exit(0)
 
 
